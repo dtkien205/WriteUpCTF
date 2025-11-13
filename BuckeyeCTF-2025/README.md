@@ -160,7 +160,7 @@ def index():
 
 - Điểm lạ là: `json.dumps()` được dùng để escape input rồi đặt thẳng vào câu SQL.
 
-Ý tưởng của tác giả app có lẽ là: Dùng `json.dumps()` để escape dấu ` rồi nhét vào SQL thì sẽ an toàn. Nhưng: JSON escaping khác hẳn SQL escaping, nên nó trở thành lỗ hổng.
+Ý tưởng của tác giả app có lẽ là: Dùng `json.dumps()` để escape dấu `"` rồi nhét vào SQL thì sẽ an toàn. Nhưng: JSON escaping khác hẳn SQL escaping, nên nó trở thành lỗ hổng.
 
 Giả sử bạn nhập payload sau vào `distro`:
 ```python
@@ -182,7 +182,7 @@ Trong SQLite, có extension fileio với hàm: `readfile(path)
 
 Hàm này sẽ đọc file trên filesystem và trả về nội dung. Nên ta thử payload:
 ```python
-" " UNION SELECT NULL,NULL,NULL,readfile('/app/flag.txt')-- -
+" UNION SELECT NULL,NULL,NULL,readfile('/app/flag.txt')-- -
 ```
 
 Server trả 500. Nghĩa là hàm readfile chưa tồn tại, extension `fileio` chưa được load.
