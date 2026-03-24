@@ -13,7 +13,7 @@
 Web cung cấp endpoint:
 - `/fetch?url=...`: server sẽ `request.get(url)` để preview nội dung
 
-- `/admin`: chỉ cho phép tru câp từ localhost:
+- `/admin`: chỉ cho phép truy cập từ localhost:
 
 ```py
 if request.remote_addr in ['127.0.0.1', '::1']:
@@ -503,15 +503,6 @@ Xác nhận XSS:
 
 ![alt text](image-12.png)
 
-
-```js
-webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: false,
-      sandbox: false,
-      preload: path.join(__dirname, 'src', 'preload.js')
-    }
-```
 
 Đọc `preload.js`:
 
