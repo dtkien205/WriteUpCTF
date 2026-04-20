@@ -1,5 +1,6 @@
 # HTTP request smuggling - Port Swigger
 
+![alt text](image-92.png)
 
 ## 1. Lab: HTTP request smuggling, basic CL.TE vulnerability
 
