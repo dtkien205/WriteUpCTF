@@ -8,7 +8,7 @@
 
 ```
 Find the carefully hidden 'Score Board' page.
-```
+``` 
 
 **Solution**
 
