@@ -1,5 +1,6 @@
 # Insecure Deserialization - Portswigger
 
+![alt text](image-33.png)
 
 ## Lab: Modifying serialized objects
 
