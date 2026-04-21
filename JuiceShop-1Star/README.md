@@ -12,7 +12,7 @@ Find the carefully hidden 'Score Board' page.
 
 **Solution**
 
-- Click chuột phải vào home page > `Inspect` > `Sources`
+- click chuột phải vào home page > `Inspect` > `Sources`
 - Ta thấy file `main.js`
 - Tìm kiếm với từ khóa `path` hoặc `score`, bạn sẽ thấy có một đường dẫn thư mục tên là `score-board`
 - Truy cập URL `http://localhost:3000/#/score-board` để hoàn thành challenge này. 
