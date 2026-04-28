@@ -1,5 +1,7 @@
 # TRX CTF 2026
 
+![alt text](image-8.png)
+
 ## 1. Web - Who Is He
 
 ### Mô tả bài
