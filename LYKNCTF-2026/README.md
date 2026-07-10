@@ -1196,52 +1196,6 @@ Nếu token đúng, server redirect về:
 /admin
 ```
 
-```python
-import base64
-import hashlib
-import hmac
-import json
-import time
-
-
-invite_key_part = "renderer-preview-seed"
-team_slug = "vrp-alpha"
-release = "review-2026.04-teamA"
-instance_seed = "761fad0002c093ec372054eb069da5f1"
-email = "your_email@example.com"
-
-
-def b64url(data):
-    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
-
-
-def canonical(obj):
-    return json.dumps(
-        obj,
-        separators=(",", ":"),
-        sort_keys=True
-    ).encode()
-
-
-secret_raw = f"{invite_key_part}:{team_slug}:{release}:{instance_seed}"
-secret = hashlib.sha256(secret_raw.encode()).digest()
-
-payload = {
-    "email": email,
-    "exp": int(time.time()) + 3600,
-    "role": "admin",
-    "scope": "backoffice",
-    "team": team_slug,
-}
-
-body = canonical(payload)
-sig = hmac.new(secret, body, hashlib.sha256).hexdigest()
-
-token = b64url(body) + "." + sig
-
-print(token)
-```
-
 Dashboard lúc này hiển thị role của user là admin.
 
 **Script forge invite token**
