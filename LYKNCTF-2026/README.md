@@ -888,9 +888,9 @@ Server trả về HTML kiểu:
 ```
 
 Điểm quan trọng là app cho người dùng tự chọn filename:
-
+```html
 <input id="filename" name="filename" value="note.txt" maxlength="80">
-
+```
 Khi submit save form, text đã OCR sẽ được lưu vào:
 
 ```bash
