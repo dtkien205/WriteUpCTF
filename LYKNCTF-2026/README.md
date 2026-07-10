@@ -1,5 +1,7 @@
 # LYKNCTF 2026 Web Writeup
 
+![alt text](image-14.png)
+
 ## 1. Web - Right in front of your eyes
 
 ### Mô tả bài
