@@ -247,7 +247,7 @@ All of the World’s Knowledge
 
 Ứng dụng chỉ hiển thị các cuốn sách công khai, trong khi cuốn sách chứa flag bị đánh dấu là `forbidden`.
 
-## Phân tích
+### Phân tích
 
 Khi nhập payload:
 
