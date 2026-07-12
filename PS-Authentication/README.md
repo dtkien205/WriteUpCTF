@@ -1,5 +1,7 @@
 # Portswigger - Authentication
 
+![alt text](image-78.png)
+
 ## APPRENTICE
 
 ## 1. Lab: Username enumeration via different responses
