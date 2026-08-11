@@ -1,5 +1,7 @@
 # D3^CTF 2026
 
+![alt text](image.png)
+
 ## 1. Web - Scope Drift
 
 ### Mô tả bài
