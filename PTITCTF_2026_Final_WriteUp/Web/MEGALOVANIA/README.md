@@ -8,12 +8,6 @@ Challenge cung cấp một game **Bad Time Simulator**. Khi người chơi chế
 
 Ứng dụng sử dụng PostgreSQL. Tham số `deaths` đáng lẽ chỉ nhận số nguyên, nhưng server lại đưa trực tiếp giá trị người dùng kiểm soát vào câu truy vấn SQL. Lỗ hổng chính là **SQL Injection**, kết hợp với bộ lọc từ khóa có thể bypass.
 
-Target:
-
-```text
-http://144.79.188.39:47102
-```
-
 ### Phân tích và khai thác
 
 Đọc HTML và JavaScript của trang game, ta thấy hàm lấy dialogue gửi request tới `/count`:
@@ -98,7 +92,7 @@ Ta thay `SELECT` đứng ngay sau `UNION` bằng `VALUES`, còn phần truy vấ
 0 union values((select version()))--
 ```
 
-![alt text](image-3.png)
+![alt text](image-6.png)
 
 Payload được chấp nhận và response xuất hiện thông tin phiên bản PostgreSQL:
 

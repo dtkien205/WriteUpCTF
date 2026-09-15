@@ -168,8 +168,6 @@ print(result["answer"])
 
 Lỗ hổng xuất phát từ việc backend dùng expression evaluator cho dữ liệu do người dùng nhập nhưng không giới hạn chặt chẽ evaluation context. Việc cho phép `T(java.lang.System)` và gọi method tùy ý khiến người dùng có thể đọc system properties, environment variables và có khả năng truy cập các API Java nhạy cảm khác.
 
-Việc block một số chuỗi RCE bằng denylist không đủ an toàn. Cách khắc phục là không evaluate input tùy ý bằng SpEL. Nếu cần hỗ trợ phép tính, nên dùng parser chỉ cho phép grammar số học hoặc cấu hình evaluation context theo allowlist chặt chẽ, đồng thời tắt type access.
-
 **Flag:**
 
 ```text
