@@ -4,15 +4,9 @@
 
 ### Mô tả bài
 
-Đề bài chỉ cung cấp file [server.py](server.py) và một dịch vụ TCP mang tên **Blackbox encryption service**. Người chơi được lấy các cặp plaintext/ciphertext, sau đó phải tính ciphertext ứng với một plaintext do server đưa ra.
+Đề bài chỉ cung cấp file server.py và một dịch vụ TCP mang tên **Blackbox encryption service**. Người chơi được lấy các cặp plaintext/ciphertext, sau đó phải tính ciphertext ứng với một plaintext do server đưa ra.
 
-Target:
-
-```text
-144.79.188.39:47106
-```
-
-Hướng giải sử dụng nội suy Lagrange trên trường hữu hạn, kết hợp nghịch đảo giai thừa và tích tiền tố/hậu tố để tính giá trị cần tìm với chi phí tuyến tính theo số mẫu. [solve.py](solve.py) là script của người giải; [pairs.txt](pairs.txt) được tạo trong quá trình thu thập dữ liệu, không phải file đề cung cấp.
+Hướng giải sử dụng nội suy Lagrange trên trường hữu hạn, kết hợp nghịch đảo giai thừa và tích tiền tố/hậu tố để tính giá trị cần tìm với chi phí tuyến tính theo số mẫu.
 
 ### Phân tích và khai thác
 
@@ -116,19 +110,19 @@ Suy ra:
 
 $$
 D_i^{-1}
-=(-1)^{n-i}\operatorname{invfact}[i]
-\operatorname{invfact}[n-i]\pmod q,
+=(-1)^{n-i}\mathrm{invfact}[i]
+\mathrm{invfact}[n-i]\pmod q,
 $$
 
-với $\operatorname{invfact}[k]=(k!)^{-1}\bmod q$. Vì $n<q$, mọi giai thừa đang dùng đều khác 0 trong trường và có nghịch đảo.
+với $\mathrm{invfact}[k]=(k!)^{-1}\bmod q$. Vì $n<q$, mọi giai thừa đang dùng đều khác 0 trong trường và có nghịch đảo.
 
 Hàm `build_invfact()` tính $n!$, lấy nghịch đảo một lần rồi điền bảng theo chiều ngược:
 
 $$
-\operatorname{invfact}[n]=(n!)^{q-2}\bmod q,
+\mathrm{invfact}[n]=(n!)^{q-2}\bmod q,
 \qquad
-\operatorname{invfact}[k-1]
-=k\operatorname{invfact}[k]\bmod q.
+\mathrm{invfact}[k-1]
+=k\mathrm{invfact}[k]\bmod q.
 $$
 
 Công thức truy hồi xuất phát từ $k!=k(k-1)!$. Nhờ đó, việc chuẩn bị bảng chỉ cần một phép lũy thừa modular và $O(n)$ phép nhân.
@@ -148,27 +142,27 @@ Tử số của $L_i(x)$ bằng $A(x)(x-i)^{-1}$. Script tính các nghịch đ�
 Mảng tiền tố lưu:
 
 $$
-\operatorname{pref}[i]=\prod_{j=0}^{i-1}(x-j),
-\qquad \operatorname{pref}[0]=1.
+\mathrm{pref}[i]=\prod_{j=0}^{i-1}(x-j),
+\qquad \mathrm{pref}[0]=1.
 $$
 
 Do đó, `pref[n + 1]` chính là $A(x)$. Trong vòng lặp duyệt từ $n$ về 0, biến `suff` lưu tích ở bên phải chỉ số đang xét:
 
 $$
-\operatorname{suff}=\prod_{j=i+1}^{n}(x-j).
+\mathrm{suff}=\prod_{j=i+1}^{n}(x-j).
 $$
 
 Nhân hai phần, ta có tích bỏ đúng thừa số $x-i$:
 
 $$
-\operatorname{pref}[i]\operatorname{suff}
+\mathrm{pref}[i]\mathrm{suff}
 =\prod_{j\ne i}(x-j).
 $$
 
 Vì thế, biến `inv_x_i` được tính bằng:
 
 $$
-\operatorname{pref}[i]\operatorname{suff}A(x)^{-1}
+\mathrm{pref}[i]\mathrm{suff}A(x)^{-1}
 =(x-i)^{-1}\pmod q.
 $$
 
@@ -177,7 +171,7 @@ Ghép tử số và nghịch đảo mẫu số:
 $$
 L_i(x)=A(x)(x-i)^{-1}
 (-1)^{n-i}
-\operatorname{invfact}[i]\operatorname{invfact}[n-i]
+\mathrm{invfact}[i]\mathrm{invfact}[n-i]
 \pmod q.
 $$
 
