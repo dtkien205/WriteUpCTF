@@ -120,12 +120,6 @@ b64 += "=" * ((4 - len(b64) % 4) % 4)
 print(base64.b64decode(b64).decode())
 ```
 
-Output:
-
-```text
-PTITCTF{r3v3ng3_fr0m_th3_ups1d3_d0wn}
-```
-
 **Flag:**
 
 ```text

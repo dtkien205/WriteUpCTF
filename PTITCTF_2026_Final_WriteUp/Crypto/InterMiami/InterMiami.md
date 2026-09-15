@@ -371,3 +371,8 @@ if __name__ == "__main__":
 
 Sau khi chuẩn bị bảng, chương trình nhận plaintext qua lời nhắc `Plaintext p = ` và in giá trị tương ứng dưới dạng `Ciphertext c = ...`. Script thực hiện việc thu thập mẫu và tính ciphertext; phần nhập đáp án vào dịch vụ được thực hiện thủ công.
 
+**Flag:**
+
+```
+PTITCTF{Lagrange_w1ll_b3_pr0ud_0f_y0u<3}
+```
