@@ -82,7 +82,7 @@ Mình sẽ thử payload UNION thông thường:
 0 union select version()--
 ```
 
-![alt text](image-2.png)
+![alt text](image-6.png)
 
 Server trả về HTTP `403`, cho thấy ứng dụng có bộ lọc từ khóa chặn chuỗi `UNION SELECT`.
 
@@ -92,7 +92,7 @@ Ta thay `SELECT` đứng ngay sau `UNION` bằng `VALUES`, còn phần truy vấ
 0 union values((select version()))--
 ```
 
-![alt text](image-6.png)
+![alt text](image-3.png)
 
 Payload được chấp nhận và response xuất hiện thông tin phiên bản PostgreSQL:
 
