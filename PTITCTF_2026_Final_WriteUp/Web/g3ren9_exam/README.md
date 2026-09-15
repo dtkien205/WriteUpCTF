@@ -4,9 +4,9 @@
 
 ### Mô tả bài
 
-Challenge cung cấp một web app có chức năng đăng ký, đăng nhập và làm bài kiểm tra kiến thức web pentest. Mục tiêu là hoàn thành bài thi với điểm 10/10 để nhận flag.
+Challenge cung cấp một web app có chức năng đăng ký, đăng nhập và làm các bài kiểm tra kiến thức web pentest.
 
-Bài này không yêu cầu khai thác SQL Injection, XSS hay bypass authentication. Hướng giải là đăng ký tài khoản, đăng nhập và làm bài trực tiếp trên giao diện web. Điểm cần chú ý là đọc kỹ nội dung câu hỏi và trả lời đúng 10/10 là có flag, thế mà lại hay.
+Theo đề bài, bộ đề thi chính thức được lưu trong file `de_thi_chinh_thuc.txt` và đang bị ẩn trên máy chủ. Mục tiêu cuối cùng là lợi dụng chức năng chọn bộ đề để đọc file này và lấy flag thật.
 
 ### Phân tích và khai thác
 
@@ -72,8 +72,29 @@ Trình duyệt tự chuyển tới `/result.php`. Khi đạt 10/10, trang kết 
 
 ![alt text](image-1.png)
 
-**Flag:**
+Nhưng mà rất tiếc flag ở trên chỉ là fake flag. Nội dung đề bài gợi ý rằng file đề thi chính thức vẫn đang được giấu trên server:
 
 ```text
-PTITCTF{w0w_y0u_d1d_it_c0ngr4tUlaTI0n_g000ddJ0b}
+de_thi_chinh_thuc.txt
 ```
+
+Lúc này mình chọn thử đề bài khác để làm thì thấy tham số `exam_format` trong `/exam.php` được dùng để chọn file đề
+
+![alt text](image-6.png)
+
+Loay hoay với path traversal thông thường thì không có tác dụng, lúc này mình có thử thêm `../` vào request gốc và một request thêm `/` thì thấy web trả về cùng một nội dung, có vẻ như chuỗi `..` đã bị filter. 
+
+![alt text](image-8.png)
+
+![alt text](image-9.png)
+
+do đó có khả năg chuỗi `....//` có thể bị biến đổi thành `../` sau bước lọc, mình thử thêm dần độ sâu và thành công đọc được flag
+
+![alt text](image-7.png)
+
+**Flag**
+
+```text
+PTITCTF{9Ud_J0Ob_w3lc0m3_tO_Th3_RoY4L_Ac4d3mY_BTYT}
+```
+
