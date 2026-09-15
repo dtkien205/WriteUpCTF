@@ -221,7 +221,7 @@ Lệnh này tải certificate về `temp.cer`, import vào user root store rồi
 https://raw.githubusercontent.com/PTIT-BunBo/CTF-writeups/refs/heads/main/certi.cer
 ```
 
-Tải lại certificate và tính SHA-1 của file:
+Tải lại certificate và tính SHA-1 của file bằng lệnh powershell:
 
 ```powershell
 Invoke-WebRequest -UseBasicParsing `
@@ -236,8 +236,6 @@ Kết quả:
 ```text
 9c1abd314ca118790d25c32cb4e7e450919b8528
 ```
-
-Lưu ý dễ nhầm: `certutil -dump certi.cer` có thể hiện certificate thumbprint khác. Nhưng service yêu cầu SHA-1 của file `.cer`, nên đáp án đúng là hash file raw.
 
 Đáp án Q5:
 

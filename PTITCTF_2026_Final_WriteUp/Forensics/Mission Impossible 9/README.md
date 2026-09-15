@@ -112,7 +112,7 @@ Language : 1033
 
 Resource này có magic `RCPACK01`, bên trong chứa payload được mã hóa bằng ChaCha20. Sau khi giải mã, payload là một file PE được đóng gói bằng PyInstaller. Trích PyInstaller ra thu được script Python `mal.py` và RSA public key 2048-bit nhúng trong malware.
 
-Phần quan trọng nhất trong `mal.py` là hàm `encrypt_file`. Mã phục dựng tương đương từ bytecode như sau:
+Phần quan trọng nhất trong `mal.py` là hàm `encrypt_file`
 
 ```python
 def encrypt_file(filepath, rsa_key):
@@ -885,16 +885,16 @@ bộ lọc sẽ nhận diện dấu `<` và `>`, sau đó escape. Khi đó respo
 ```
 Payload không trở thành thẻ HTML thật, nên thẻ `<base>` không có tác dụng.
 
+![alt text](image-34.png)
+
+![alt text](image-33.png)
+
 Để bypass, mình dùng hai ký tự fullwidth:
 ```
 ﹤  U+FE64
 ﹥  U+FE65
 ```
 Hai ký tự này nhìn giống `<` và `>`, nhưng không phải ký tự ASCII `<` và `>`. Vì bộ lọc chỉ kiểm tra ký tự ASCII, payload có thể đi qua. Sau đó, khi renderer dựng trang review, các ký tự này được chuẩn hóa thành `<` và `>` thật.
-
-![alt text](image-34.png)
-
-![alt text](image-33.png)
 
 Có thể tạo body URL-encoded bằng Python:
 
