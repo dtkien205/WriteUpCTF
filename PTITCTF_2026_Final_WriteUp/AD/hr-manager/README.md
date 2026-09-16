@@ -172,7 +172,7 @@ public String confirm(String username, String code) {
 }
 ```
 
-`java.util.Random` là PRNG tất định: biết seed là tính ra đúng chuỗi số. Vì `request` trả luôn `requestedAt` trong JSON (`{"requestedAt": ...}`), attacker có ngay seed để tái tạo OTP — không cần đọc email/notification của nạn nhân. `confirm` thành công thì cấp session token của nạn nhân, tức chiếm tài khoản hoàn toàn.
+`java.util.Random` là PRNG tất định: biết seed là tính ra đúng chuỗi số. Vì `request` trả luôn `requestedAt` trong JSON (`{"requestedAt": ...}`), attacker có ngay seed để tái tạo OTP - không cần đọc email/notification của nạn nhân. `confirm` thành công thì cấp session token của nạn nhân, tức chiếm tài khoản hoàn toàn.
 
 Chuỗi khai thác (chiếm cả `HR_ADMIN`):
 
@@ -297,7 +297,7 @@ if __name__ == "__main__":
 
 #### Nguyên nhân gốc và hướng vá
 
-Năm lỗ hổng đều là thiếu kiểm soát trên dữ liệu người dùng; vá từng cái:
+Bảy lỗ hổng đều là thiếu kiểm soát trên dữ liệu người dùng; vá từng cái:
 
 1. IDOR - chỉ cho chủ hồ sơ / `HR_ADMIN` thấy field nhạy cảm, redact `privateNote`/`bankAccount`/`signature` cho người khác thay vì trả full:
 
@@ -338,19 +338,44 @@ if (addr.isLoopbackAddress() || addr.isAnyLocalAddress()
 }
 ```
 
-5. SQL Injection - whitelist ba tham số cột/hướng ở tầng service trước khi truyền xuống hàm:
+5. SQL Injection - chuyển thân hàm từ `v_sql := ... EXECUTE` sang `RETURN QUERY SELECT ...` tĩnh; hai chỗ nối chuỗi định danh (điểm inject) đổi thành `CASE`, phần còn lại giữ nguyên. Cụ thể chỉ sửa 2 chỗ:
 
-```java
-private static final Set<String> COLS = Set.of("e.email", "e.job_title", "e.full_name", "e.id");
-private static final Set<String> SORTS = Set.of("e.id", "e.full_name", "e.job_title", "e.email");
-private static final Set<String> DIRS = Set.of("ASC", "DESC");
-
-if (!COLS.contains(extra))  throw new ApiException(400, "Invalid extra column");
-if (!SORTS.contains(sort))  throw new ApiException(400, "Invalid sort column");
-if (!DIRS.contains(direction.toUpperCase())) throw new ApiException(400, "Invalid sort direction");
+Cột `extra` trong `SELECT`:
+```sql
+-- TRƯỚC (nối chuỗi -> inject)
+|| '(' || p_extra_col || ')::text '
+-- SAU (CASE, tập cố định; input lạ -> ELSE)
+(CASE p_extra_col
+     WHEN 'e.email'         THEN e.email
+     WHEN 'e.job_title'     THEN e.job_title
+     WHEN 'e.full_name'     THEN e.full_name
+     WHEN 'e.contract_type' THEN e.contract_type
+     WHEN 'e.id'            THEN e.id::text
+     ELSE e.email END)::text
 ```
 
-Chỉ những định danh cột hợp lệ mới lọt vào chuỗi SQL nối trong `fn_directory_search`, triệt tiêu injection.
+Mệnh đề `ORDER BY`:
+```sql
+-- TRƯỚC (nối chuỗi -> inject)
+|| 'ORDER BY ' || p_sort_col || ' ' || p_sort_dir || ' LIMIT 200'
+-- SAU (CASE cho cột + hai nhánh ASC/DESC)
+ORDER BY
+  CASE WHEN upper(p_sort_dir)='ASC'  THEN
+    CASE p_sort_col WHEN 'e.full_name' THEN e.full_name
+                    WHEN 'e.job_title' THEN e.job_title
+                    WHEN 'e.email'     THEN e.email
+                    WHEN 'e.id'        THEN lpad(e.id::text,12,'0')
+                    ELSE lpad(e.id::text,12,'0') END END ASC  NULLS LAST,
+  CASE WHEN upper(p_sort_dir)='DESC' THEN
+    CASE p_sort_col WHEN 'e.full_name' THEN e.full_name
+                    WHEN 'e.job_title' THEN e.job_title
+                    WHEN 'e.email'     THEN e.email
+                    WHEN 'e.id'        THEN lpad(e.id::text,12,'0')
+                    ELSE lpad(e.id::text,12,'0') END END DESC NULLS LAST
+LIMIT 200
+```
+
+`p_keyword`/`p_department` giữ nguyên vì trong câu tĩnh chúng đã là tham số (planner tự bind), không còn `EXECUTE` để nối chuỗi.
 
 6. Account Takeover (OTP khôi phục) - dùng `SecureRandom`, không trả seed/timestamp về client, và ràng buộc thêm hạn dùng + số lần thử:
 
@@ -368,12 +393,17 @@ public void request(String username) {
 
 Kèm giới hạn số lần `confirm` sai (khoá tạm sau vài lần) để chặn brute-force phần còn lại.
 
-7. SQL Injection #2 (`fn_headcount_stats`) - whitelist `groupBy` ở `StatsService` giống #5:
+7. SQL Injection #2 (`fn_headcount_stats`) - cùng cách: thân hàm chuyển sang `RETURN QUERY SELECT ...` tĩnh, chỉ sửa 1 chỗ nối chuỗi:
 
-```java
-private static final Set<String> GROUPS = Set.of("d.name", "e.job_title", "e.contract_type", "e.status");
-if (!GROUPS.contains(column)) throw new ApiException(400, "Invalid group column");
+```sql
+-- TRƯỚC (nối chuỗi -> inject)
+|| 'SELECT (' || p_group_col || ')::text AS bucket, count(*)::bigint '
+-- SAU (CASE, tập cố định)
+SELECT (CASE p_group_col
+            WHEN 'd.name'          THEN COALESCE(d.name,'')
+            WHEN 'e.job_title'     THEN e.job_title
+            WHEN 'e.contract_type' THEN e.contract_type
+            WHEN 'e.status'        THEN e.status
+            ELSE COALESCE(d.name,'') END)::text AS bucket, count(*)::bigint
 ```
-
-Về lâu dài nên sửa cả hai hàm PL/pgSQL để không nối chuỗi định danh cột (dùng `format('%I', col)` với whitelist, hoặc `quote_ident`), thay vì chỉ chặn ở tầng service.
 
