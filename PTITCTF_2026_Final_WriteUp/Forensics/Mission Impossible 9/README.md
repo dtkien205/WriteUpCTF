@@ -445,7 +445,7 @@ dword_140153180 = 4;
 
 Vì vậy `sub_140004A90` là hàm sinh message cuối cùng.
 
-![message xref](./image9.png)
+![message xref](./IMAGE9.png)
 
 Đầu hàm `sub_140004A90`, chương trình xóa output buffer rồi kiểm tra context:
 
