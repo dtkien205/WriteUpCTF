@@ -14,8 +14,8 @@ Writeup AD
 
 Ở phần AD mình sẽ viết các bug tìm ra trong thời gian thi.
 
-- hr-manager: [Link Write up]()
-- round_receipt: [Link Write up]()
-- ticketproof: [Link Write up]()
-- trade_flow: [Link Write up]()
+- hr-manager: [Link Write up](https://github.com/dtkien205/WriteUpCTF/tree/master/PTITCTF_2026_Final_WriteUp/AD/hr-manager)
+- round_receipt: [Link Write up](https://github.com/dtkien205/WriteUpCTF/tree/master/PTITCTF_2026_Final_WriteUp/AD/round_receipt)
+- ticketproof: [Link Write up](https://github.com/dtkien205/WriteUpCTF/tree/master/PTITCTF_2026_Final_WriteUp/AD/ticketproof)
+- trade_flow: [Link Write up](https://github.com/dtkien205/WriteUpCTF/tree/master/PTITCTF_2026_Final_WriteUp/AD/trade_flow)
 - medrec: [Link Write up](https://app.notion.com/p/PTIT-CTF-2026-FINAL-3dc14b16b14c80dcabe6f100e30d8a54#3dd14b16b14c80b895d9cb8bfaedd35a)
