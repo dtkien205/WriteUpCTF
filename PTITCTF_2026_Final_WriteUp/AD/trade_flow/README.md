@@ -208,7 +208,7 @@ def render_print_template(source: str, context: dict) -> str:
     return _ENV.from_string(source).render(context)
 ```
 
-`SandboxedEnvironment` chặn truy cập thuộc tính bắt đầu bằng `_` và builtins nguy hiểm, vô hiệu gadget chain nhưng vẫn cho `for`/`if`/thay biến bình thường.
+`SandboxedEnvironment` chặn truy cập thuộc tính bắt đầu bằng `_` và builtins nguy hiểm, vô hiệu gadget chain
 
 3. Vô hiệu HTML tag trong dữ liệu nội suy - dùng `finalize` hook escape `<` và `>` cho mọi `{{ expr }}`, thay vì tin `|safe`:
 
