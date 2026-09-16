@@ -400,195 +400,130 @@ if __name__ == "__main__":
 
 Mình tiến hành giải mã `Emberbound.exe.ptitenc` và thu được `Emberbound.exe`, tức file gốc trước khi bị ransomware mã hóa. Từ đây, thay vì chỉ dừng ở một file, ta áp dụng cùng cách giải mã cho các artifact `.ptitenc` khác trong AD1 để tìm thêm dữ liệu liên quan đến nguồn lây.
 
-Khi chạy chương trình, đây là một trò chơi nhỏ. Người chơi di chuyển bằng các phím mũi tên và dùng phím `X` để tấn công quái/boss.
-
-Trong quá trình chơi, game có 3 màn. Màn thứ 3 là màn boss:
+Challenge cung cấp file PE Windows 64-bit: `Emberbound.recovered.exe`. Khi chạy, chương trình là một game nhỏ gồm 3 màn. Màn cuối là boss:
 
 ```text
 03 / THE HOLLOW REGENT
 ```
 
-Theo hướng đi của bài, một mảnh flag sẽ được sinh ra sau khi đạt tới trạng thái liên quan đến màn boss. Mục tiêu của phần này là tìm mảnh flag đó.
+Mục tiêu của bài là lấy mảnh flag được sinh ra sau khi game đạt trạng thái thắng.
 
-Trước tiên, kiểm tra file bằng **Detect It Easy (DIE)**.
+File bị pack bằng Themida hoặc WinLicense. Vì vậy không phân tích trực tiếp file ban đầu mà chạy chương trình rồi dump module đã unpack:
 
-![image1](./image1-1.png)
+![win state](./image3.png)
 
-Kết quả cho thấy đây là file PE Windows 64-bit và có dấu hiệu bị protect/pack bằng Themida hoặc WinLicense. Các dấu hiệu đáng chú ý là các section và chuỗi liên quan đến Themida/WinLicense, ví dụ:
+Sau khi có dump, load file unpacked vào IDA và tìm các chuỗi liên quan tới màn thắng:
 
-```text
-.themida
-.boot
-WinLicense
-Themida
-```
+![win state](./image4.png)
 
-Khi mở trực tiếp file `.exe` trong IDA, hàm `start` chưa dẫn tới logic game thật. Hàm này chủ yếu là stub unpack/decrypt của Themida, thể hiện qua các đoạn copy/back-reference như:
+Xref tới chuỗi `THE HOLLOW CROWN HAS FALLEN` dẫn tới hàm chính của game. Trong hàm này, biến `dword_140153180` được dùng làm state chính. Nhánh đáng chú ý nhất là state `4`, tương ứng với màn thắng.
+
+Trong state `4`, game hiển thị màn thắng và cho phép bấm `C` để copy message:
 
 ```c
-qmemcpy(v10, &v10[-v60], v61);
+if (IsKeyPressed(0x43))
+    copy_to_clipboard(&unk_140155868);
 ```
 
-Từ đây có thể rút ra nhận xét quan trọng:
-
-> File gốc bị pack, nên cần phân tích chương trình sau khi đã chạy và đã unpack trong RAM.
-
-
-Vì static analysis trên file gốc bị che bởi Themida/WinLicense, mình chuyển sang hướng chạy game rồi dump RAM
-
-Cách làm là chạy game trong môi trường Windows VM, chơi đến màn boss rồi tạo memory dump của tiến trình. Lý do chọn màn 3 là vì đây là màn có boss `THE HOLLOW REGENT`, và các dữ liệu/routine liên quan đến fragment nhiều khả năng chỉ xuất hiện hoặc được khởi tạo khi game đã vào đúng stage này.
-
-mình chơi đến màn 3 rồi tạo dump:
-
-```text
-Task Manager
-→ Details
-→ Emberbound.recovered.exe
-→ Create dump file
-```
-
-Sau bước này, thay vì tiếp tục phân tích file `.exe` gốc, ta phân tích file dump. Dump chứa trạng thái RAM của tiến trình tại thời điểm game đang chạy, bao gồm code sau unpack, dữ liệu runtime, stage hiện tại và các buffer dùng để hiển thị message.
-
-Sau khi có file dump, bước đầu tiên là kiểm tra xem dump có thực sự được lấy khi game đang ở màn boss hay không.
-
-Dùng `HxD` để tìm các chuỗi liên quan đến màn 3 và màn thắng:
-
-![image2](./image2-2.png)
-
-
-mình tìm được các chuỗi quan trọng như sau:
-
-- `03 / THE HOLLOW REGENT`: xác nhận dump có chứa dữ liệu của màn boss.
-- `DAWN RETURNS`: tiêu đề màn thắng.
-- `THE HOLLOW CROWN HAS FALLEN`: thông báo sau khi boss bị hạ.
-- `C   COPY MESSAGE`: game có chức năng copy message sau khi thắng.
-- `Beneath the crown, a message remains.`: gợi ý rằng dưới boss/crown còn lại một message, đây là một manh mối quan trọng để tiếp tục phân tích.
-
-
-
-Như vậy dump này đúng là được lấy khi game đã vào màn boss.
-
-Sau khi xác nhận dump đúng trạng thái, tiếp tục mở phần code đã dump trong IDA, rồi tìm xref tới các chuỗi:
-
-```text
-DAWN RETURNS
-THE HOLLOW CROWN HAS FALLEN
-C   COPY MESSAGE
-```
-
-
-Tại vùng render, chương trình kiểm tra `game_state`. Nếu `game_state == 4` thì game vẽ màn thắng và hiển thị message.
-
-Luồng đáng chú ý có dạng:
-
-```asm
-cmp     game_state, 4
-jne     not_win_screen
-cmp     message_guard, 0
-jne     copy_message_handler
-lea     rdx, "DAWN RETURNS"
-lea     rcx, "THE HOLLOW CROWN HAS FALLEN"
-...
-lea     rcx, "C   COPY MESSAGE"
-```
-
-Điều này cho thấy `game_state = 4` là trạng thái thắng, còn message được lưu ở một buffer riêng.
-
-Một buffer đáng chú ý được tham chiếu nhiều lần là:
-
-```text
-0x140155868
-```
-
-Đây là vùng được dùng làm message buffer khi game thắng.
-
-Tiếp tục lần ngược từ trạng thái thắng về phần update của màn 3. Trong code runtime có một đoạn xử lý riêng cho boss context.
-
-Đoạn chính có dạng:
-
-```asm
-lea     rbx, [boss_context]
-mov     rcx, rbx
-call    sub_140004580        ; update/check boss
-
-test    eax, eax
-je      continue_game
-
-cmp     eax, 3
-jne     other_state
-
-mov     rcx, rbx
-call    sub_1400049b0        ; lấy context/key của boss
-lea     rdx, [message_buffer]
-mov     rcx, rax
-call    sub_140004a90        ; sinh message vào buffer
-
-mov     dword ptr [game_state], 4
-```
-
-
-Đây là đoạn quan trọng nhất của bài.
-
-Có thể diễn giải lại thành pseudocode:
+Đồng thời khi reset, chương trình xóa buffer:
 
 ```c
-result = boss_update(&boss_context, input_or_delta);
-
-if (result == 3) {
-    ctx = get_boss_message_context(&boss_context);
-    make_win_message(ctx, win_message_buffer);
-    game_state = 4;
-}
+memset(&unk_140155868, 0, 0x11);
 ```
 
-Như vậy để lấy được fragment, ta không cần đọc toàn bộ engine game. Chỉ cần đi theo chuỗi logic:
+`0x11 = 16 byte message + 1 byte null`, nên `unk_140155868` chính là buffer chứa mảnh flag cần tìm.
+
+![win state](./image8.png)
+
+Xref tới `unk_140155868` cho thấy trước khi chuyển sang state thắng, chương trình gọi:
+
+```c
+ctx = sub_1400049B0();
+sub_140004A90(ctx, &unk_140155868);
+dword_140153180 = 4;
+```
+
+Vì vậy `sub_140004A90` là hàm sinh message cuối cùng.
+
+![message xref](./image9.png)
+
+Đầu hàm `sub_140004A90`, chương trình xóa output buffer rồi kiểm tra context:
+
+```c
+memset(out, 0, 0x10);
+out[0x10] = 0;
+
+if (ctx == NULL)
+    return;
+
+if (*(uint32_t *)(ctx + 0x20) != 0x28)
+    return;
+```
+
+Nghĩa là message chỉ được sinh khi counter trong context bằng `0x28`, tức `40`. Tuy nhiên không thể chỉ sửa counter thành `40`, vì 32 byte đầu của context cũng bị biến đổi sau mỗi lần update và được dùng làm key giải mã ở bước sau.
+
+Context ban đầu được khởi tạo như sau:
 
 ```text
-boss_update
-→ get_boss_message_context
-→ make_win_message
-→ win_message_buffer
+ctx[0x00:0x10] = data tại 0x140104780
+ctx[0x10:0x20] = data tại 0x140104790
+ctx[0x20:0x24] = counter = 0
 ```
 
-Hàm sinh message tương ứng với địa chỉ runtime:
+Mỗi lần update, chương trình dùng counter hiện tại để chọn một packet dài `0x42c` byte từ bảng tại `0x1400FA0A0`, rồi gọi hàm update context:
 
 ```text
-sub_140004a90
+packet = 0x1400FA0A0 + counter * 0x42c
+domain = 0x57000000 + counter
+ctx = update(ctx, packet, domain)
+counter++
 ```
 
-Ở đầu hàm này, chương trình xóa buffer output rồi kiểm tra context truyền vào:
+Counter chạy từ `0` đến `0x27`, tổng cộng 40 lần. Đây là lý do phải mô phỏng đủ 40 update thay vì patch thẳng sang màn thắng.
 
-```asm
-movb    byte ptr [rdx+10h], 0
-movups  xmm0, [rdx]
-test    rcx, rcx
-je      fail
-cmp     dword ptr [rcx+20h], 28h
-je      generate_message
-```
+![context update](./image13.png)
 
-Điều kiện đáng chú ý là:
+Khi context hợp lệ, `sub_140004A90` lấy blob mã hóa tại:
 
 ```text
-[ctx + 0x20] == 0x28
+0x1400F7F20
 ```
 
-`0x28` theo hệ thập phân là `40`.
+Blob ban đầu dài `0x1F61` byte. Chương trình giải mã 8 lớp, mỗi lớp dùng key lấy từ kết quả lớp trước:
 
-Điều kiện `[ctx + 0x20] == 0x28` tương ứng với việc boss context đạt đủ progress sau nhiều lần bị tấn công. Khi điều kiện này thỏa mãn, game gọi hàm tạo message thắng và chuyển sang trạng thái chiến thắng.
+```python
+packet = img[0xF7F20:0xF7F20 + 0x1F61]
+key = ctx[:32]
 
-Sau khi lần được tới hàm `make_win_message`, ta phân tích routine sinh message thay vì cố chơi thắng bằng tay.
+for i in range(8):
+    pt = box_decrypt(key, 0x46000000 + i, packet)
+    key = pt[:32]
+    packet = pt[32:]
+```
 
-Trong dump, hàm này nhận:
+Sau 8 lớp này, dữ liệu còn lại tiếp tục được xor với keystream từ hàm `sub_140004A00`, rồi chương trình kiểm tra checksum và chạy một VM nhỏ.
+
+VM đọc instruction theo dạng:
 
 ```text
-rcx = boss message context
-rdx = win message buffer
+1 byte opcode + 4 byte immediate đã mã hóa
 ```
 
-Sau khi context hợp lệ, hàm tạo chuỗi message cuối rồi ghi vào buffer thắng.
+PC bắt đầu từ `0x325`. Mỗi vòng VM giải mã immediate bằng công thức phụ thuộc PC, thực thi opcode qua jump table, rồi cuối cùng ghi ra 16 byte output. 16 byte đó chính là message được copy vào `unk_140155868`.
 
-Phân tích routine tạo message trong dump cho ra mảnh flag.
+![vm](./image15.png)
+
+Thay vì chơi game, ta mô phỏng trực tiếp toàn bộ thuật toán trong Python:
+
+1. Khởi tạo context.
+2. Update context đủ 40 lần.
+3. Giải blob cuối qua 8 lớp.
+4. Giải stream cuối.
+5. Chạy VM để lấy 16 byte message.
+
+Script: [solve_emberbound.py](./solve_emberbound.py)
+
+![result](./image16.png)
 
 Mảnh rev:
 
