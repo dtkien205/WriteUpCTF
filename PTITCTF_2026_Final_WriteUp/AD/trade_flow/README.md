@@ -219,4 +219,3 @@ def _neutralize_tags(value):
     return str(value).replace("<", "&lt;").replace(">", "&gt;")
 ```
 
-Chỉ escape hai ký tự `<`/`>` để tag không còn hoạt động, đồng thời không phá dữ liệu mà checker so khớp (không đụng `&`, `"`, `'`).
