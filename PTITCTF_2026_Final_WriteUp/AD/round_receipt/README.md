@@ -20,9 +20,9 @@ def encrypt_ctr(key, nonce, data):
 
 Điểm cần chú ý là `initial_value=0` được cố định. Trong chế độ CTR, AES không mã hóa bản rõ trực tiếp mà sinh ra một chuỗi keystream từ bộ đếm rồi XOR với bản rõ:
 
-$$
+```math
 \mathrm{KS}=\mathrm{AES}(k,\ \mathrm{nonce}\Vert 0)\ \Vert\ \mathrm{AES}(k,\ \mathrm{nonce}\Vert 1)\ \Vert\ \cdots,\qquad C=P\oplus\mathrm{KS}.
-$$
+```
 
 Keystream chỉ phụ thuộc vào bộ ba `(key, nonce, initial_value)`, hoàn toàn độc lập với bản rõ. Vì `initial_value` bị đặt cứng bằng 0, mọi lời gọi `encrypt_ctr` với cùng `(key, nonce)` sẽ tạo ra **đúng cùng một keystream**, bắt đầu từ bộ đếm 0.
 
@@ -39,12 +39,12 @@ receipt_pt  = make_receipt(note_id)
 receipt_ct  = encrypt_ctr(round_key, round_nonce, receipt_pt)      # (2)
 ```
 
-Cả `(1)` và `(2)` dùng chung `round_key` và `round_nonce`. Đặt keystream chung là $\mathrm{KS}$, ta có:
+Cả `(1)` và `(2)` dùng chung `round_key` và `round_nonce`. Đặt keystream chung là $`\mathrm{KS}`$, ta có:
 
-$$
+```math
 \texttt{flag\_ct}=\texttt{message}\oplus\mathrm{KS},\qquad
 \texttt{receipt\_ct}=\texttt{receipt\_pt}\oplus\mathrm{KS}.
-$$
+```
 
 Cả hai bản mã đều bị rò rỉ ra ngoài mà không cần `secret`. Endpoint `/api/notes/<id>/public` trả về `flag_ct`, còn `/api/receipts/<id>` trả về `receipt_ct`:
 
@@ -89,17 +89,17 @@ Bản rõ `receipt_pt` gồm chuỗi cố định `ROUND-RECEIPT|` (14 byte), `n
 
 Vì bản rõ của biên lai đã biết và nó dùng chung keystream với message, ta khôi phục được keystream trực tiếp:
 
-$$
+```math
 \mathrm{KS}=\texttt{receipt\_ct}\oplus\texttt{receipt\_pt}.
-$$
+```
 
 Message bị giới hạn `MAX_MESSAGE_LEN = 160` byte, nhỏ hơn nhiều so với 287 byte keystream tái tạo được, nên phần keystream này luôn phủ trọn `flag_ct`. Từ đó:
 
-$$
+```math
 \texttt{message}=\texttt{flag\_ct}\oplus\mathrm{KS}[:\,\lvert\texttt{flag\_ct}\rvert].
-$$
+```
 
-Viết gộp, trên phần chồng lấn ta có $\texttt{message}=\texttt{flag\_ct}\oplus\texttt{receipt\_ct}\oplus\texttt{receipt\_pt}$, đúng dạng two-time pad khi một bản rõ đã biết. Quá trình này không đụng tới `round_key` và không cần `secret`.
+Viết gộp, trên phần chồng lấn ta có $`\texttt{message}=\texttt{flag\_ct}\oplus\texttt{receipt\_ct}\oplus\texttt{receipt\_pt}`$, đúng dạng two-time pad khi một bản rõ đã biết. Quá trình này không đụng tới `round_key` và không cần `secret`.
 
 Với một `note_id` bất kỳ, các bước là:
 
@@ -156,4 +156,4 @@ flag_ct    = encrypt_ctr(round_key, round_nonce,   message_bytes)
 receipt_ct = encrypt_ctr(round_key, receipt_nonce, receipt_pt)   # nonce khác
 ```
 
-kèm việc thêm cột `receipt_nonce_b64` để lưu nonce mới. Khi hai keystream khác nhau, phép XOR hai bản mã không còn triệt tiêu về $P_1\oplus P_2$, chuỗi khai thác trên bị vô hiệu. Về lâu dài, nên chuyển sang AEAD (AES-GCM) với nonce ngẫu nhiên duy nhất mỗi lần mã hóa để có thêm cả toàn vẹn dữ liệu.
+kèm việc thêm cột `receipt_nonce_b64` để lưu nonce mới. Khi hai keystream khác nhau, phép XOR hai bản mã không còn triệt tiêu về $`P_1\oplus P_2`$, chuỗi khai thác trên bị vô hiệu.
